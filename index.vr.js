@@ -96,12 +96,8 @@ export default class Main extends React.Component {
 
     return (
       <View>
-        <Pano source={asset("chess-world.jpg")} />
-        <PointLight
-          style={{ color: "white", transform: [{ translate: [0, 0, 0] }] }}
-        />
-
         <Model
+          lit
           style={{
             position: "absolute",
             transform: [
@@ -201,6 +197,12 @@ class App extends React.Component {
     const ReactEuFeed = provideTwitterSearch(TwitterFeed)(`@reacteurope`);
     return (
       <View>
+
+        <Pano source={asset("pano.jpg")} />
+
+        <PointLight
+          style={{ color: "white", transform: [{ translate: [0, 0, 0] }] }}
+        />
         <ApolloProvider client={client}>
           <MainWithData setSpeaker={this.setSpeaker} />
         </ApolloProvider>
