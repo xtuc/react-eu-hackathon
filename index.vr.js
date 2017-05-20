@@ -6,6 +6,7 @@ import {
   Pano,
   Text,
   Model,
+  Image,
   PointLight,
   View
 } from "react-vr";
@@ -52,7 +53,7 @@ function fetchSpeakersCoords(speakers) {
       .then(json => {
         return {
           ...speaker,
-          coords: json.results[0].geometry.location
+          coords: json.results[0] && json.results[0].geometry.location
         };
       })
   );
@@ -82,7 +83,12 @@ export default class Main extends React.Component {
     if (data && data.loading === false) {
       fetchSpeakersLocation(data.events[0].speakers)
         .then(speakers => fetchSpeakersCoords(speakers))
-        .then(speakers => this.setState({ speakers }));
+        .then(speakers => this.setState({ speakers }))
+        .then(
+          speakers =>
+            speakers &&
+            speakers.filter(speaker => speaker.location && speaker.twitter)
+        );
     }
   }
 
@@ -111,6 +117,7 @@ export default class Main extends React.Component {
             mtl: asset("earth.mtl")
           }}
         />
+        {speakers && <SpeakerPin speaker={speakers[0]} />}
       </View>
     );
   }
@@ -122,6 +129,7 @@ const MainWithData = graphql(gql`
       speakers {
         id
         name
+        bio
         twitter
         github
       }
@@ -129,25 +137,42 @@ const MainWithData = graphql(gql`
   }
 `)(Main);
 
-const TwitterFeed = ({ data, left = false, right = false }) => {
+const TwitterFeed = ({ data, left = false, right = false, title = "foo" }) => {
   if (data.loading) {
     return null;
   }
 
-  const tweets = data.twitter.search.map(tweet => (
-    <Text
-      key={tweet.id}
-      numberOfLines={2}
-      style={{
-        display: "flex",
-        color: "black",
-        marginBottom: 0.2,
-        fontSize: 0.2
-      }}
-    >
-      {tweet.text}
-    </Text>
-  ));
+  const tweets = data.twitter.search.map(tweet => {
+    return (
+      <View style={{ flexDirection: "row" }} key={tweet.id}>
+        <Image
+          style={{
+            width: 0.5,
+            height: 0.5,
+            marginRight: 0.2,
+            borderRadius: 0.05
+          }}
+          source={{
+            uri: tweet.user.profile_image_url.replace("normal", "400x400")
+          }}
+        />
+        <Text
+          numberOfLines={2}
+          style={{
+            flex: 1,
+            color: "black",
+            marginBottom: 0.2,
+            fontSize: 0.2
+          }}
+        >
+          <Text style={{ fontWeight: "bold" }}>{tweet.user.screen_name}</Text>
+          :
+          {" "}
+          {tweet.text}
+        </Text>
+      </View>
+    );
+  });
   const leftTransform = [{ translate: [-8, 3, -3] }, { rotateY: 50 }];
   const rightTransform = [{ translate: [2.5, 3, -3] }, { rotateY: -50 }];
   return (
@@ -159,10 +184,45 @@ const TwitterFeed = ({ data, left = false, right = false }) => {
         width: 5,
         padding: 0.2,
         backgroundColor: "white",
+        borderRadius: 0.1,
         transform: (left && leftTransform) || (right && rightTransform)
       }}
     >
+      <Text>{title}</Text>
       {tweets}
+    </View>
+  );
+};
+
+const SpeakerPin = (speaker, style) => {
+  console.log(speaker);
+  return (
+    <View
+      style={{
+        position: "absolute",
+        flexDirection: "column",
+        height: 6,
+        width: 5,
+        padding: 0.2,
+        backgroundColor: "white",
+        borderRadius: 0.1,
+        transform: [{ translate: [0, -1, 0] }],
+        ...style
+      }}
+    >
+      <Image
+        style={{
+          width: 0.5,
+          height: 0.5,
+          marginRight: 0.2,
+          borderRadius: 0.05
+        }}
+        source={{
+          uri: `https://twitter.com/${speaker.twitter}/profile_image?size=original`
+        }}
+      />
+      <Text>{speaker.name}</Text>
+      <Text>{speaker.bio}</Text>
     </View>
   );
 };
@@ -173,6 +233,10 @@ const provideTwitterSearch = Component => query =>
       query GetTwitterFeed($query: String!) {
         twitter {
           search(q: $query, count: 8) {
+            user {
+              screen_name
+              profile_image_url
+            }
             id
             text
           }
