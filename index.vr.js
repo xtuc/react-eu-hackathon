@@ -132,6 +132,7 @@ const MainWithData = graphql(gql`
         bio
         twitter
         github
+        avatarUrl
       }
     }
   }
@@ -194,35 +195,42 @@ const TwitterFeed = ({ data, left = false, right = false, title = "foo" }) => {
   );
 };
 
-const SpeakerPin = (speaker, style) => {
-  console.log(speaker);
+const SpeakerPin = ({ speaker, style }) => {
   return (
     <View
       style={{
         position: "absolute",
         flexDirection: "column",
-        height: 6,
-        width: 5,
-        padding: 0.2,
+        height: 2,
+        width: 1.5,
+        padding: 0.1,
         backgroundColor: "white",
         borderRadius: 0.1,
-        transform: [{ translate: [0, -1, 0] }],
+        transform: [{ translate: [-1, 1, -2] }, { scale: 0.5 }],
         ...style
       }}
     >
-      <Image
+      <View
         style={{
-          width: 0.5,
-          height: 0.5,
-          marginRight: 0.2,
-          borderRadius: 0.05
+          flexDirection: "row",
+          alignItems: "center",
+          marginBottom: 0.1
         }}
-        source={{
-          uri: `https://twitter.com/${speaker.twitter}/profile_image?size=original`
-        }}
-      />
-      <Text>{speaker.name}</Text>
-      <Text>{speaker.bio}</Text>
+      >
+        <Image
+          style={{
+            width: 0.5,
+            height: 0.5,
+            marginRight: 0.2,
+            borderRadius: 0.05
+          }}
+          source={{
+            uri: speaker.avatarUrl
+          }}
+        />
+        <Text style={{ color: "black" }}>{speaker.name}</Text>
+      </View>
+      <Text style={{ color: "black" }}>{speaker.bio}</Text>
     </View>
   );
 };
