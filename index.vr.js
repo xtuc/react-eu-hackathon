@@ -101,8 +101,8 @@ export default class Main extends React.Component {
           style={{
             position: "absolute",
             transform: [
-              { translate: [0, 0, -100] },
-              { scale: 0.5 },
+              { translate: [0, 0, -4] },
+              { scale: 0.016 },
               { rotateY: this.state.rotation }
             ]
           }}
@@ -148,8 +148,8 @@ const TwitterFeed = ({ data, left = false, right = false }) => {
       {tweet.text}
     </Text>
   ));
-  const leftTransform = [{ translate: [-8, 3, -2] }, { rotateY: 50 }];
-  const rightTransform = [{ translate: [4, 3, -2] }, { rotateY: -50 }];
+  const leftTransform = [{ translate: [-8, 3, -3] }, { rotateY: 50 }];
+  const rightTransform = [{ translate: [2.5, 3, -3] }, { rotateY: -50 }];
   return (
     <View
       style={{
