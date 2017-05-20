@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Animated,
   AppRegistry,
   asset,
   Pano,
@@ -11,6 +12,24 @@ import {
 
 
 export default class hackathon extends React.Component {
+  static defaultProps = {
+    speed: .1,
+  }
+
+  state = {
+    rotation: 0,
+  };
+  
+  rotate = () => {
+    requestAnimationFrame(() => {
+      this.setState(({ rotation }) => ({ rotation: rotation + (1 * this.props.speed) }), this.rotate);
+    });
+  }
+
+  componentDidMount() {
+    this.rotate();
+  }
+
   render() {
     return (
       <View>
@@ -20,10 +39,12 @@ export default class hackathon extends React.Component {
         <Model
           lit
           style={{
-            translateX: 100,
-            translateY: 100,
-            scaleX: 0.5,
-            scaleY: 0.5,
+            position: 'absolute',
+            transform: [
+              {translate: [0, 0, -100]},
+              {scale: .5},
+              {rotateY: this.state.rotation}
+            ],
           }}
           source={{
             obj: asset('earth.obj'),
