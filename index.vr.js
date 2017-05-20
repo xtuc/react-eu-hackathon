@@ -66,7 +66,7 @@ function fetchSpeakersCoords(speakers) {
 
 export default class Main extends React.Component {
   static defaultProps = {
-    speed: 1
+    speed: 0.1
   };
 
   state = {
@@ -109,64 +109,57 @@ export default class Main extends React.Component {
       <View
         style={{
           position: "absolute",
-          width: 4,
-          height: 4,
-          transform: [{ translate: [1 / deg, 0, 1 / (deg % 180)] }]
+          //width: 4,
+          //height: 4,
+          //layoutOrigin: [-0.5, -0.5],
+          transform: [
+            { translate: [0, 0, -5] },
+            { rotateY: this.state.rotation }
+          ]
         }}
       >
-        <View
-          style={{
-            position: "absolute",
-            width: 4,
-            height: 4,
-            layoutOrigin: [-0.5, -0.5],
-            transform: [
-              { translate: [-2, 2, -4] },
-              { rotateY: this.state.rotation }
-            ]
-          }}
-        >
-          {true &&
-            <Model
-              lit
-              style={{
-                position: "absolute",
-                transform: [{ scale: 0.016 }],
-                opacity: 0.2
-              }}
-              source={{
-                obj: asset("earth.obj"),
-                mtl: asset("earth.mtl")
-              }}
-            />}
-          {speakers &&
-            speakers.map((speaker, key) => {
-              const num = speakers.length - 1;
-              const splices = 360 / num;
+        <Sphere style={{ position: "absolute" }} />
+        {true &&
+          <Model
+            lit
+            style={{
+              position: "absolute",
+              transform: [{ scale: 0.016 }],
+              opacity: 0.2
+            }}
+            source={{
+              obj: asset("earth.obj"),
+              mtl: asset("earth.mtl")
+            }}
+          />}
+        {true &&
+          speakers &&
+          speakers.map((speaker, key) => {
+            const num = speakers.length - 1;
+            const splices = 360 / num;
 
-              const rotateY = key * splices;
+            const rotateY = key * splices;
 
-              return (
-                <View
-                  style={{
-                    position: "absolute",
-                    layoutOrigin: [0.5, 0.5],
-                    transform: [
-                      { rotateY },
-                      { translateX: 1 },
-                      { translateY: key % 2 ? 1.5 : 0.5 }
-                    ]
-                  }}
-                >
-                  <SpeakerPin
-                    speaker={speaker}
-                    onClick={setSpeaker}
-                    rotation={this.state.rotation}
-                  />
-                </View>
-              );
-            })}
-        </View>
+            return (
+              <View
+                style={{
+                  position: "absolute",
+                  layoutOrigin: [0.5, 0.5],
+                  transform: [
+                    { rotateY },
+                    { translateX: 1.2 },
+                    { translateY: key % 2 ? 1.5 : 0.5 }
+                  ]
+                }}
+              >
+                <SpeakerPin
+                  speaker={speaker}
+                  onClick={setSpeaker}
+                  rotation={this.state.rotation * 0}
+                />
+              </View>
+            );
+          })}
       </View>
     );
   }
@@ -188,41 +181,39 @@ const MainWithData = graphql(gql`
 `)(Main);
 
 const TwitterFeed = ({ data, left = false, right = false, title = "foo" }) => {
-  if (data.loading) {
-    return null;
-  }
-
-  const tweets = data.twitter.search.map(tweet => {
-    return (
-      <View style={{ flexDirection: "row" }} key={tweet.id}>
-        <Image
-          style={{
-            width: 0.5,
-            height: 0.5,
-            marginRight: 0.2,
-            borderRadius: 0.05
-          }}
-          source={{
-            uri: tweet.user.profile_image_url.replace("normal", "400x400")
-          }}
-        />
-        <Text
-          numberOfLines={2}
-          style={{
-            flex: 1,
-            color: "black",
-            marginBottom: 0.2,
-            fontSize: 0.2
-          }}
-        >
-          <Text style={{ fontWeight: "bold" }}>{tweet.user.screen_name}</Text>
-          :
-          {" "}
-          {tweet.text}
-        </Text>
-      </View>
-    );
-  });
+  const tweets =
+    !data.loading &&
+    data.twitter.search.map(tweet => {
+      return (
+        <View style={{ flexDirection: "row" }} key={tweet.id}>
+          <Image
+            style={{
+              width: 0.5,
+              height: 0.5,
+              marginRight: 0.2,
+              borderRadius: 0.05
+            }}
+            source={{
+              uri: tweet.user.profile_image_url.replace("normal", "400x400")
+            }}
+          />
+          <Text
+            numberOfLines={2}
+            style={{
+              flex: 1,
+              color: "black",
+              marginBottom: 0.2,
+              fontSize: 0.2
+            }}
+          >
+            <Text style={{ fontWeight: "bold" }}>{tweet.user.screen_name}</Text>
+            :
+            {" "}
+            {tweet.text}
+          </Text>
+        </View>
+      );
+    });
   const leftTransform = [{ translate: [-8, 3, -3] }, { rotateY: 50 }];
   const rightTransform = [{ translate: [2.5, 3, -3] }, { rotateY: -50 }];
   return (
@@ -238,7 +229,6 @@ const TwitterFeed = ({ data, left = false, right = false, title = "foo" }) => {
         transform: (left && leftTransform) || (right && rightTransform)
       }}
     >
-      <Text>{title}</Text>
       {tweets}
     </View>
   );
@@ -250,36 +240,42 @@ const SpeakerPin = ({ speaker, onClick, rotation }) => {
       onClick={() => onClick(speaker.twitter)}
       style={{
         position: "absolute",
-        flexDirection: "column",
-        height: 2,
-        width: 1.5,
-        padding: 0.1,
-        backgroundColor: "red",
-        borderRadius: 0.1,
-        transform: [{ rotateY: -rotation }, { scale: 0.25 }]
+        transform: [{ rotateY: -rotation }, { scale: 0.3 }]
       }}
     >
       <View
+        billboarding="on"
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 0.1
+          flexDirection: "column",
+          height: 2,
+          width: 1.5,
+          padding: 0.1,
+          backgroundColor: "white",
+          borderRadius: 0.1
         }}
       >
-        <Image
+        <View
           style={{
-            width: 0.5,
-            height: 0.5,
-            marginRight: 0.2,
-            borderRadius: 0.05
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 0.1
           }}
-          source={{
-            uri: speaker.avatarUrl
-          }}
-        />
-        <Text style={{ color: "black" }}>{speaker.name}</Text>
+        >
+          <Image
+            style={{
+              width: 0.5,
+              height: 0.5,
+              marginRight: 0.2,
+              borderRadius: 0.05
+            }}
+            source={{
+              uri: speaker.avatarUrl
+            }}
+          />
+          <Text style={{ color: "black" }}>{speaker.name}</Text>
+        </View>
+        <Text style={{ color: "black" }}>{speaker.bio}</Text>
       </View>
-      <Text style={{ color: "black" }}>{speaker.bio}</Text>
     </VrButton>
   );
 };
@@ -309,7 +305,7 @@ class App extends React.Component {
   state = {
     selectedSpeaker: "necolas"
   };
-  setSpeaker = speaker => this.setState({ speaker: selectedSpeaker });
+  setSpeaker = selectedSpeaker => this.setState({ selectedSpeaker });
 
   render() {
     const SpeakerFeed = provideTwitterSearch(TwitterFeed)(
