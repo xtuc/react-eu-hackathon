@@ -29,6 +29,12 @@ const twitterClient = new ApolloClient({
   })
 });
 
+const twitterClient = new ApolloClient({
+  networkInterface: createNetworkInterface({
+    uri: "https://www.graphqlhub.com/graphql"
+  })
+});
+
 function fetchSpeakersLocation(speakers) {
   const fetches = speakers.map(speaker =>
     fetch(`https://api.github.com/users/${speaker.github}`, {
@@ -153,8 +159,44 @@ const MainWithData = graphql(gql`
   }
 `)(Main);
 
-function App() {
-  return <ApolloProvider client={client}><MainWithData /></ApolloProvider>;
+const TwitterFeed = data => {
+  console.log(data);
+  return null;
+};
+
+const provideTwitterSearch = Component => query =>
+  graphql(
+    gql`
+      query GetTwitterFeed($query: String!) {
+        twitter {
+          search(q: $query) {
+            text
+          }
+        }
+      }
+    `,
+    {
+      options: { variables: { query } }
+    }
+  )(Component);
+
+class App extends React.Component {
+  state = {
+    selectedSpeaker: "necolas"
+  };
+  render() {
+    const TwitterFeedWithData = provideTwitterSearch(TwitterFeed)(
+      `@${this.state.selectedSpeaker}`
+    );
+    return (
+      <View>
+        {/*<ApolloProvider client={client}><MainWithData /></ApolloProvider>*/}
+        <ApolloProvider client={twitterClient}>
+          <TwitterFeedWithData />
+        </ApolloProvider>
+      </View>
+    );
+  }
 }
 
 AppRegistry.registerComponent("hackathon", () => App);
