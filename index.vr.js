@@ -24,10 +24,32 @@ const client = new ApolloClient({
 });
 
 function fetchSpeakersLocation(speakers) {
-  const fetches = speakers.map(speaker => () =>
-    fetch(`https://api.github.com/users/${speaker.github}`).then(res =>
+  const fetches = speakers.map(speaker =>
+    fetch(`https://api.github.com/users/${speaker.github}`, {
+      headers: {
+        Authorization: "token 9bb471abc092a0cd87166b03029bd75a2ab02ab9"
+      }
+    }).then(res =>
       res.json().then(json => ({ ...speaker, location: json.location }))
-    ));
+    )
+  );
+
+  return Promise.all(fetches);
+}
+
+function fetchSpeakersCoords(speakers) {
+  const fetches = speakers.map(speaker =>
+    fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?sensor=false&address=${speaker.location}&key=AIzaSyDb5-BZCbyMYBAwr8PHlwp7w5F1sA0BdaY`
+    )
+      .then(res => res.json())
+      .then(json => {
+        return {
+          ...speaker,
+          coords: json.results[0].geometry.location
+        };
+      })
+  );
 
   return Promise.all(fetches);
 }
@@ -52,19 +74,20 @@ export default class Main extends React.Component {
 
   componentWillReceiveProps({ data }) {
     if (data && data.loading === false) {
-      this.setState({
-        speakers: fetchSpeakersLocation(data.events[0].speakers)
-      });
+      fetchSpeakersLocation(data.events[0].speakers)
+        .then(speakers => fetchSpeakersCoords(speakers))
+        .then(speakers => this.setState({ speakers }));
     }
   }
 
   componentDidMount() {
     this.rotate();
+    ``;
   }
 
   render() {
-    const { data } = this.props;
-    console.log(data);
+    const { speakers } = this.state;
+    console.log(speakers);
     return (
       <View>
         <Pano source={asset("chess-world.jpg")} />
