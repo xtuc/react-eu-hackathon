@@ -23,6 +23,12 @@ const client = new ApolloClient({
   })
 });
 
+const twitterClient = new ApolloClient({
+  networkInterface: createNetworkInterface({
+    uri: "https://www.graphqlhub.com/graphql"
+  })
+});
+
 function fetchSpeakersLocation(speakers) {
   const fetches = speakers.map(speaker =>
     fetch(`https://api.github.com/users/${speaker.github}`, {
@@ -87,7 +93,13 @@ export default class Main extends React.Component {
 
   render() {
     const { speakers } = this.state;
-    console.log(speakers);
+
+    const tweets = [
+      <Text style={{ color: 'black', display: 'block' }}>Hello World!</Text>,
+      <Text style={{ color: 'black', display: 'block' }}>Hello World!</Text>,
+      <Text style={{ color: 'black', display: 'block' }}>Hello World!</Text>,
+    ];
+
     return (
       <View>
         <Pano source={asset("chess-world.jpg")} />
@@ -96,7 +108,6 @@ export default class Main extends React.Component {
         />
 
         <Model
-          lit
           style={{
             position: "absolute",
             transform: [
@@ -109,7 +120,21 @@ export default class Main extends React.Component {
             obj: asset("earth.obj"),
             mtl: asset("earth.mtl")
           }}
-        />
+        >
+        </Model>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            height: 3,
+            padding: 0.2,
+            backgroundColor: 'white',
+            transform: [{ translate: [3, 0.5, -4] }, { rotateY: -50 }],
+          }}
+        >
+          {tweets}
+        </View>
+
       </View>
     );
   }
