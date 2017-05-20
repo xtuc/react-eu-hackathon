@@ -6,8 +6,11 @@ import {
   Pano,
   Text,
   Model,
+  Sphere,
   Image,
   PointLight,
+  VrButton,
+  Box,
   View
 } from "react-vr";
 import {
@@ -63,7 +66,7 @@ function fetchSpeakersCoords(speakers) {
 
 export default class Main extends React.Component {
   static defaultProps = {
-    speed: 0.1
+    speed: 1
   };
 
   state = {
@@ -100,24 +103,70 @@ export default class Main extends React.Component {
     const { speakers } = this.state;
     const { setSpeaker } = this.props;
 
+    const deg = this.state.rotation % 360;
+
     return (
-      <View>
-        <Model
-          lit
+      <View
+        style={{
+          position: "absolute",
+          width: 4,
+          height: 4,
+          transform: [{ translate: [1 / deg, 0, 1 / (deg % 180)] }]
+        }}
+      >
+        <View
           style={{
             position: "absolute",
+            width: 4,
+            height: 4,
+            layoutOrigin: [-0.5, -0.5],
             transform: [
-              { translate: [0, 0, -4] },
-              { scale: 0.016 },
+              { translate: [-2, 2, -4] },
               { rotateY: this.state.rotation }
             ]
           }}
-          source={{
-            obj: asset("earth.obj"),
-            mtl: asset("earth.mtl")
-          }}
-        />
-        {speakers && <SpeakerPin speaker={speakers[0]} />}
+        >
+          {true &&
+            <Model
+              lit
+              style={{
+                position: "absolute",
+                transform: [{ scale: 0.016 }],
+                opacity: 0.2
+              }}
+              source={{
+                obj: asset("earth.obj"),
+                mtl: asset("earth.mtl")
+              }}
+            />}
+          {speakers &&
+            speakers.map((speaker, key) => {
+              const num = speakers.length - 1;
+              const splices = 360 / num;
+
+              const rotateY = key * splices;
+
+              return (
+                <View
+                  style={{
+                    position: "absolute",
+                    layoutOrigin: [0.5, 0.5],
+                    transform: [
+                      { rotateY },
+                      { translateX: 1 },
+                      { translateY: key % 2 ? 1.5 : 0.5 }
+                    ]
+                  }}
+                >
+                  <SpeakerPin
+                    speaker={speaker}
+                    onClick={setSpeaker}
+                    rotation={this.state.rotation}
+                  />
+                </View>
+              );
+            })}
+        </View>
       </View>
     );
   }
@@ -195,19 +244,19 @@ const TwitterFeed = ({ data, left = false, right = false, title = "foo" }) => {
   );
 };
 
-const SpeakerPin = ({ speaker, style }) => {
+const SpeakerPin = ({ speaker, onClick, rotation }) => {
   return (
-    <View
+    <VrButton
+      onClick={() => onClick(speaker.twitter)}
       style={{
         position: "absolute",
         flexDirection: "column",
         height: 2,
         width: 1.5,
         padding: 0.1,
-        backgroundColor: "white",
+        backgroundColor: "red",
         borderRadius: 0.1,
-        transform: [{ translate: [-1, 1, -2] }, { scale: 0.5 }],
-        ...style
+        transform: [{ rotateY: -rotation }, { scale: 0.25 }]
       }}
     >
       <View
@@ -231,7 +280,7 @@ const SpeakerPin = ({ speaker, style }) => {
         <Text style={{ color: "black" }}>{speaker.name}</Text>
       </View>
       <Text style={{ color: "black" }}>{speaker.bio}</Text>
-    </View>
+    </VrButton>
   );
 };
 
