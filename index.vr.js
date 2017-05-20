@@ -29,12 +29,6 @@ const twitterClient = new ApolloClient({
   })
 });
 
-const twitterClient = new ApolloClient({
-  networkInterface: createNetworkInterface({
-    uri: "https://www.graphqlhub.com/graphql"
-  })
-});
-
 function fetchSpeakersLocation(speakers) {
   const fetches = speakers.map(speaker =>
     fetch(`https://api.github.com/users/${speaker.github}`, {
@@ -94,17 +88,11 @@ export default class Main extends React.Component {
 
   componentDidMount() {
     this.rotate();
-    ``;
   }
 
   render() {
     const { speakers } = this.state;
-
-    const tweets = [
-      <Text style={{ color: 'black', display: 'block' }}>Hello World!</Text>,
-      <Text style={{ color: 'black', display: 'block' }}>Hello World!</Text>,
-      <Text style={{ color: 'black', display: 'block' }}>Hello World!</Text>,
-    ];
+    const { setSpeaker } = this.props;
 
     return (
       <View>
@@ -126,21 +114,7 @@ export default class Main extends React.Component {
             obj: asset("earth.obj"),
             mtl: asset("earth.mtl")
           }}
-        >
-        </Model>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            height: 3,
-            padding: 0.2,
-            backgroundColor: 'white',
-            transform: [{ translate: [3, 0.5, -4] }, { rotateY: -50 }],
-          }}
-        >
-          {tweets}
-        </View>
-
+        />
       </View>
     );
   }
@@ -159,9 +133,42 @@ const MainWithData = graphql(gql`
   }
 `)(Main);
 
-const TwitterFeed = data => {
-  console.log(data);
-  return null;
+const TwitterFeed = ({ data, left = false, right = false }) => {
+  if (data.loading) {
+    return null;
+  }
+
+  const tweets = data.twitter.search.map(tweet => (
+    <Text
+      key={tweet.id}
+      numberOfLines={2}
+      style={{
+        display: "flex",
+        color: "black",
+        marginBottom: 0.2,
+        fontSize: 0.2
+      }}
+    >
+      {tweet.text}
+    </Text>
+  ));
+  const leftTransform = [{ translate: [-8, 3, -2] }, { rotateY: 50 }];
+  const rightTransform = [{ translate: [4, 3, -2] }, { rotateY: -50 }];
+  return (
+    <View
+      style={{
+        position: "absolute",
+        flexDirection: "column",
+        height: 6,
+        width: 5,
+        padding: 0.2,
+        backgroundColor: "white",
+        transform: (left && leftTransform) || (right && rightTransform)
+      }}
+    >
+      {tweets}
+    </View>
+  );
 };
 
 const provideTwitterSearch = Component => query =>
@@ -169,14 +176,15 @@ const provideTwitterSearch = Component => query =>
     gql`
       query GetTwitterFeed($query: String!) {
         twitter {
-          search(q: $query) {
+          search(q: $query, count: 8) {
+            id
             text
           }
         }
       }
     `,
     {
-      options: { variables: { query } }
+      options: { variables: { query }, pollInterval: 10000 }
     }
   )(Component);
 
@@ -184,15 +192,23 @@ class App extends React.Component {
   state = {
     selectedSpeaker: "necolas"
   };
+  setSpeaker = speaker => this.setState({ speaker: selectedSpeaker });
+
   render() {
-    const TwitterFeedWithData = provideTwitterSearch(TwitterFeed)(
+    const SpeakerFeed = provideTwitterSearch(TwitterFeed)(
       `@${this.state.selectedSpeaker}`
     );
+    const ReactEuFeed = provideTwitterSearch(TwitterFeed)(`@reacteurope`);
     return (
       <View>
-        {/*<ApolloProvider client={client}><MainWithData /></ApolloProvider>*/}
+        <ApolloProvider client={client}>
+          <MainWithData setSpeaker={this.setSpeaker} />
+        </ApolloProvider>
         <ApolloProvider client={twitterClient}>
-          <TwitterFeedWithData />
+          <View>
+            <SpeakerFeed right />
+            <ReactEuFeed left />
+          </View>
         </ApolloProvider>
       </View>
     );
