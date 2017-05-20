@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Animated,
   AppRegistry,
@@ -7,23 +7,55 @@ import {
   Text,
   Model,
   PointLight,
-  View,
-} from 'react-vr';
+  View
+} from "react-vr";
+import {
+  ApolloClient,
+  createNetworkInterface,
+  ApolloProvider,
+  gql,
+  graphql
+} from "react-apollo";
 
+const client = new ApolloClient({
+  networkInterface: createNetworkInterface({
+    uri: "https://www.react-europe.org/gql"
+  })
+});
 
-export default class hackathon extends React.Component {
+function fetchSpeakersLocation(speakers) {
+  const fetches = speakers.map(speaker => () =>
+    fetch(`https://api.github.com/users/${speaker.github}`).then(res =>
+      res.json().then(json => ({ ...speaker, location: json.location }))
+    ));
+
+  return Promise.all(fetches);
+}
+
+export default class Main extends React.Component {
   static defaultProps = {
-    speed: .1,
-  }
+    speed: 0.1
+  };
 
   state = {
-    rotation: 0,
+    rotation: 0
   };
-  
+
   rotate = () => {
     requestAnimationFrame(() => {
-      this.setState(({ rotation }) => ({ rotation: rotation + (1 * this.props.speed) }), this.rotate);
+      this.setState(
+        ({ rotation }) => ({ rotation: rotation + 1 * this.props.speed }),
+        this.rotate
+      );
     });
+  };
+
+  componentWillReceiveProps({ data }) {
+    if (data && data.loading === false) {
+      this.setState({
+        speakers: fetchSpeakersLocation(data.events[0].speakers)
+      });
+    }
   }
 
   componentDidMount() {
@@ -31,29 +63,50 @@ export default class hackathon extends React.Component {
   }
 
   render() {
+    const { data } = this.props;
+    console.log(data);
     return (
       <View>
-        <Pano source={asset('chess-world.jpg')}/>
-        <PointLight style={{color:'white', transform:[{translate : [0, 0, 0]}]}} />
+        <Pano source={asset("chess-world.jpg")} />
+        <PointLight
+          style={{ color: "white", transform: [{ translate: [0, 0, 0] }] }}
+        />
 
         <Model
           lit
           style={{
-            position: 'absolute',
+            position: "absolute",
             transform: [
-              {translate: [0, 0, -100]},
-              {scale: .5},
-              {rotateY: this.state.rotation}
-            ],
+              { translate: [0, 0, -100] },
+              { scale: 0.5 },
+              { rotateY: this.state.rotation }
+            ]
           }}
           source={{
-            obj: asset('earth.obj'),
-            mtl: asset('earth.mtl'),
+            obj: asset("earth.obj"),
+            mtl: asset("earth.mtl")
           }}
         />
       </View>
     );
   }
-};
+}
 
-AppRegistry.registerComponent('hackathon', () => hackathon);
+const MainWithData = graphql(gql`
+  query GetSpeakersList {
+    events(slug: "reacteurope-2017") {
+      speakers {
+        id
+        name
+        twitter
+        github
+      }
+    }
+  }
+`)(Main);
+
+function App() {
+  return <ApolloProvider client={client}><MainWithData /></ApolloProvider>;
+}
+
+AppRegistry.registerComponent("hackathon", () => App);
