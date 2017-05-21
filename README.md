@@ -1,8 +1,8 @@
 # React Europe 2017 / Mozilla Hackathon project
 
-![Screenshot1](.github/Screenshot1.png)
-![Screenshot2](.github/Screenshot2.png)
-![Screenshot3](.github/Screenshot3.png)
+<img src=".github/Screenshot1.png" width="400" height="auto" />
+<img src=".github/Screenshot2.png" width="400" height="auto" />
+<img src=".github/Screenshot3.png" width="400" height="auto" />
 
 ## Team:
 
