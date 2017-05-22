@@ -194,7 +194,7 @@ const TwitterFeed = ({ data, left = false, right = false, title = "foo" }) => {
               borderRadius: 0.05
             }}
             source={{
-              uri: tweet.user.profile_image_url.replace("normal", "400x400")
+              uri: tweet.user.profile_image_url.replace("normal", "400x400").replace("http", "https")
             }}
           />
           <Text
